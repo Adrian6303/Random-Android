@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.random.ui.theme.RandomTheme
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,70 +33,103 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RandomGenerator() {
     var randomNumber by remember { mutableStateOf(0) }
-    var minValue by remember { mutableStateOf("") }
-    var maxValue by remember { mutableStateOf("") }
+    var minValue by remember { mutableStateOf("0") }
+    var maxValue by remember { mutableStateOf("100") }
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "Random Number Generator",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(20.dp, 60.dp)
-        )
-
-        Row {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
-                text = "Enter the range of numbers:",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(16.dp)
+                text = "Random Number Generator",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(20.dp, 60.dp)
             )
-        }
-        Row {
-            TextField(
-                value = minValue,
-                onValueChange = { minValue = it },
-                label = { Text("Min Value") },
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-        Row{
-            TextField(
-                value = maxValue,
-                onValueChange = { maxValue = it },
-                label = { Text("Max Value") },
-                modifier = Modifier.padding(16.dp)
-            )
-        }
 
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Row {
-
-            Button(onClick = {
-                val min = minValue.toIntOrNull() ?: 0
-                val max = maxValue.toIntOrNull() ?: 100
-                randomNumber = generateRandomNumber(min, max)
-            }) {
+            Row {
                 Text(
-                    text = "Generate Random Number",
-                    style = MaterialTheme.typography.titleLarge
-                    )
+                    text = "Enter the range of numbers:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
+            Row {
+                TextField(
+                    value = minValue,
+                    onValueChange = { if (it.length <= 9) minValue = it },
+                    label = { Text("Min Value") },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            Row {
+                TextField(
+                    value = maxValue,
+                    onValueChange = { if (it.length <= 9) maxValue = it },
+                    label = { Text("Max Value") },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Row {
+                val scope = rememberCoroutineScope()
+                Button(onClick = {
+                    val min = minValue.toIntOrNull()
+                    val max = maxValue.toIntOrNull()
+                    scope.launch {
+                        if (min == null || max == null || min > max) {
+                            randomNumber = -1
+                            snackbarHostState.showSnackbar("Invalid range. Please enter valid numbers.")
+                        } else {
+                            randomNumber = generateRandomNumber(min, max)
+                        }
+                    }
+
+                }) {
+                    Text(
+                        text = "Generate Random Number",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row {
+
+                if (randomNumber >= 0) {
+                    Text(
+                        text = "Generated Number: $randomNumber",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Generated Number: ERROR",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+            SnackbarHost(hostState = snackbarHostState)
+
+
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row {
-
-            Text(
-                text = "Generated Number: $randomNumber",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
+        Text(
+            text = "© 2024 Schiopu Adrian",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(50.dp)
+        )
     }
+
 }
 
 fun generateRandomNumber(min: Int, max: Int): Int {
