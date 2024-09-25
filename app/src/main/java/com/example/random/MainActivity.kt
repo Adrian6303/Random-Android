@@ -11,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.random.ui.theme.RandomTheme
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,8 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             RandomTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background
                 ) {
                     RandomGenerator()
                 }
@@ -30,19 +31,21 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun RandomGenerator() {
-    var randomNumber by remember { mutableStateOf(0) }
+    var randomNumber by remember { mutableIntStateOf(0) }
     var minValue by remember { mutableStateOf("0") }
     var maxValue by remember { mutableStateOf("100") }
     val snackbarHostState = remember { SnackbarHostState() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Random Number Generator",
@@ -60,7 +63,7 @@ fun RandomGenerator() {
             Row {
                 TextField(
                     value = minValue,
-                    onValueChange = { if (it.length <= 9) minValue = it },
+                    onValueChange = { if (it.length <= 9) minValue = it.filter { char -> char != '\n' } },
                     label = { Text("Min Value") },
                     modifier = Modifier.padding(16.dp)
                 )
@@ -68,7 +71,7 @@ fun RandomGenerator() {
             Row {
                 TextField(
                     value = maxValue,
-                    onValueChange = { if (it.length <= 9) maxValue = it },
+                    onValueChange = { if (it.length <= 9) maxValue = it.filter { char -> char != '\n' } },
                     label = { Text("Max Value") },
                     modifier = Modifier.padding(16.dp)
                 )
@@ -81,8 +84,9 @@ fun RandomGenerator() {
                 Button(onClick = {
                     val min = minValue.toIntOrNull()
                     val max = maxValue.toIntOrNull()
+                    keyboardController?.hide()
                     scope.launch {
-                        if (min == null || max == null || min > max) {
+                        if (min == null || max == null || min > max || min < 0 || max < 0) {
                             randomNumber = -1
                             snackbarHostState.showSnackbar("Invalid range. Please enter valid numbers.")
                         } else {
@@ -92,8 +96,7 @@ fun RandomGenerator() {
 
                 }) {
                     Text(
-                        text = "Generate Random Number",
-                        style = MaterialTheme.typography.titleLarge
+                        text = "Generate Random Number", style = MaterialTheme.typography.titleLarge
                     )
                 }
             }
