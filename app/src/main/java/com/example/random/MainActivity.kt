@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.tooling.preview.Preview
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,4 +138,10 @@ fun RandomGenerator() {
 
 fun generateRandomNumber(min: Int, max: Int): Int {
     return (min..max).random()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewRandomGenerator() {
+    RandomGenerator()
 }
